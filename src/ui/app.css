@@ -1,0 +1,357 @@
+:root {
+  --bg: #14171f;
+  --card: #1d222d;
+  --line: #2e3646;
+  --text: #e8ecf3;
+  --sub: #9aa4b5;
+  --accent: #4da3ff;
+  --accent-bg: #1c3b5e;
+  --warn: #ff6b6b;
+  --ok: #3ecf8e;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+.app {
+  max-width: 760px;
+  margin: 0 auto;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+main {
+  padding: 8px 12px 40px;
+  display: grid;
+  gap: 12px;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* ---------- 上部バー ---------- */
+.transport {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 12px;
+  align-items: center;
+  padding: calc(8px + env(safe-area-inset-top)) 12px 8px;
+  background: rgba(20, 23, 31, 0.96);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+
+.play {
+  min-width: 112px;
+  height: 52px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--ok);
+  color: #06210f;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.play.is-playing {
+  background: var(--warn);
+  color: #2a0808;
+}
+.play:disabled {
+  background: var(--line);
+  color: var(--sub);
+  cursor: not-allowed;
+}
+
+.tempo {
+  display: grid;
+  grid-template-columns: auto 4.5rem 1fr;
+  gap: 8px;
+  align-items: center;
+}
+.tempo label {
+  color: var(--sub);
+  font-size: 0.85rem;
+}
+.tempo input[type='number'] {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  text-align: center;
+}
+.toggles {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent);
+  min-height: 32px;
+}
+
+/* ---------- カード ---------- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+}
+.card h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+.card h3 {
+  margin: 12px 0 6px;
+  font-size: 0.9rem;
+  color: var(--sub);
+}
+.hint {
+  margin: 8px 0 0;
+  color: var(--sub);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+/* ---------- チップ ---------- */
+.chips,
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.presets {
+  margin-bottom: 8px;
+}
+.chip {
+  min-height: 40px;
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: transparent;
+  white-space: nowrap;
+}
+.chip.on {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+  color: #fff;
+}
+.chip.small {
+  min-height: 34px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+}
+.chip.mute-on {
+  background: #5a2323;
+  border-color: var(--warn);
+}
+.chip.solo-on {
+  background: #5a4a14;
+  border-color: #ffd04d;
+}
+.chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.variants {
+  margin-top: 10px;
+}
+.chip.seg.on {
+  background: var(--accent);
+  color: #04182c;
+  font-weight: 600;
+}
+
+/* ---------- 入力 ---------- */
+textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #11141b;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1rem;
+  resize: vertical;
+}
+textarea[aria-invalid='true'] {
+  border-color: var(--warn);
+}
+select {
+  min-height: 40px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #11141b;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: center;
+  margin-top: 10px;
+}
+.row label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--sub);
+  font-size: 0.9rem;
+}
+.row .hint {
+  margin: 0;
+}
+.errors {
+  margin: 8px 0 0;
+  padding: 0 0 0 1.2em;
+  color: var(--warn);
+  font-size: 0.88rem;
+}
+.errors code {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #3a1b1b;
+}
+
+/* ---------- コードチャート ---------- */
+.chart {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.bar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-height: 72px;
+  padding: 16px 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #11141b;
+  text-align: center;
+}
+.bar .num {
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  color: var(--sub);
+  font-size: 0.7rem;
+}
+.bar .chords {
+  display: flex;
+  justify-content: space-around;
+  gap: 4px;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+.bar .chords .nc {
+  color: var(--sub);
+  font-weight: 400;
+}
+.bar .marks {
+  position: absolute;
+  right: 4px;
+  bottom: 2px;
+  display: flex;
+  gap: 3px;
+}
+.mark {
+  padding: 0 5px;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-style: normal;
+  line-height: 1.5;
+}
+.mark.a,
+.mark.b {
+  background: var(--accent);
+  color: #04182c;
+  font-weight: 700;
+}
+.mark.fill {
+  background: #ffb347;
+  color: #2b1a00;
+}
+.mark.fill.auto {
+  background: transparent;
+  border: 1px dashed #ffb347;
+  color: #ffb347;
+}
+.bar.outside {
+  opacity: 0.45;
+}
+.bar.selected {
+  border-color: var(--accent);
+}
+.bar.current {
+  background: #1f5f3a;
+  border-color: var(--ok);
+}
+.bar.range-a {
+  border-left: 3px solid var(--accent);
+}
+.bar.range-b {
+  border-right: 3px solid var(--accent);
+}
+
+.bar-menu-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.bar-menu-head h2 {
+  margin: 0;
+}
+
+/* ---------- ミキサー ---------- */
+.mixer {
+  display: grid;
+  gap: 10px;
+}
+.channel {
+  display: grid;
+  grid-template-columns: 5.5rem auto auto 1fr;
+  gap: 8px;
+  align-items: center;
+}
+.channel .name {
+  font-size: 0.9rem;
+}
+
+@media (max-width: 480px) {
+  .chart {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .channel {
+    grid-template-columns: 4.6rem auto auto 1fr;
+    gap: 6px;
+  }
+}
