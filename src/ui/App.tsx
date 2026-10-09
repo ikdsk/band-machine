@@ -9,6 +9,7 @@ import { BarMenu } from './BarMenu'
 import { ChordChart } from './ChordChart'
 import { MixerPanel } from './MixerPanel'
 import { ProgressionEditor } from './ProgressionEditor'
+import type { Preset } from './presets'
 import { StylePicker } from './StylePicker'
 import { TransportBar } from './TransportBar'
 import { type Settings, loadSettings, saveSettings } from './settings'
@@ -122,6 +123,13 @@ export function App() {
     else fills[bar] = kind
     patch({ fills })
   }
+  const applyPreset = (p: Preset) =>
+    patch({
+      text: p.text,
+      ...(p.variantId ? { variantId: p.variantId } : {}),
+      ...(p.bpm !== undefined ? { bpm: p.bpm } : {}),
+      ...(p.transpose !== undefined ? { transpose: p.transpose } : {}),
+    })
   const setLoopStart = (bar: number) => {
     const end = range ? range.end : total
     patch({ range: { start: bar, end: end > bar ? end : bar + 1 } })
@@ -156,6 +164,7 @@ export function App() {
           beatsPerBar={s.beatsPerBar}
           transpose={s.transpose}
           onText={(text) => patch({ text })}
+          onPreset={applyPreset}
           onBeats={(beatsPerBar) => patch({ beatsPerBar })}
           onTranspose={(transpose) => patch({ transpose })}
         />

@@ -15,6 +15,8 @@ export interface ChordEntry {
 export interface ChartBar {
   index: number
   entries: ChordEntry[]
+  /** この小節から始まるセクション名（`# サビ` のコメント行から） */
+  section?: string
 }
 
 export interface ParseError {
@@ -60,7 +62,21 @@ export function splitBeats(beatsPerBar: number, n: number): number[] {
 
 const isRepeat = (t: string) => t === '%' || t === '-'
 
-export function parseProgression(text: string, beatsPerBar = 4): Chart {
+/**
+ * `#` で始まる行はコメント。文字位置を保つため空白に置き換え、
+ * コメントの文字列（セクション名として使う）は位置つきで返す。
+ */
+function stripComments(text: string): { text: string; comments: { start: number; name: string }[] } {
+  const comments: { start: number; name: string }[] = []
+  const stripped = text.replace(/^([ \t]*)#([^\n]*)$/gm, (all, _indent: string, body: string, offset: number) => {
+    comments.push({ start: offset, name: body.trim() })
+    return ' '.repeat(all.length)
+  })
+  return { text: stripped, comments }
+}
+
+export function parseProgression(source: string, beatsPerBar = 4): Chart {
+  const { text, comments } = stripComments(source)
   const rawBars = splitBars(text)
   const bars: ChartBar[] = []
   const errors: ParseError[] = []
@@ -71,8 +87,18 @@ export function parseProgression(text: string, beatsPerBar = 4): Chart {
   }
 
   let lastEntry: ChordEntry | null = null
+  let nextComment = 0
+  let pendingSection: string | undefined
 
   rawBars.forEach((tokens, bi) => {
+    while (nextComment < comments.length && comments[nextComment].start < tokens[0].start) {
+      const name = comments[nextComment++].name
+      if (name !== '') pendingSection = name
+    }
+    const section = pendingSection
+    pendingSection = undefined
+    const pushBar = (bar: ChartBar) => bars.push(section === undefined ? bar : { ...bar, section })
+
     // 小節全体の繰り返し: | % |
     if (tokens.length === 1 && isRepeat(tokens[0].text)) {
       const prev = bars[bi - 1]
@@ -83,11 +109,11 @@ export function parseProgression(text: string, beatsPerBar = 4): Chart {
           bar: bi,
           message: '最初の小節に「%」は使えません',
         })
-        bars.push({ index: bi, entries: [{ chord: null, startBeat: 0, beats: beatsPerBar, label: 'N.C.' }] })
+        pushBar({ index: bi, entries: [{ chord: null, startBeat: 0, beats: beatsPerBar, label: 'N.C.' }] })
         return
       }
       const entries = prev.entries.map((e) => ({ ...e }))
-      bars.push({ index: bi, entries })
+      pushBar({ index: bi, entries })
       lastEntry = entries[entries.length - 1]
       return
     }
@@ -134,7 +160,7 @@ export function parseProgression(text: string, beatsPerBar = 4): Chart {
       beat += len
     })
 
-    bars.push({ index: bi, entries })
+    pushBar({ index: bi, entries })
     lastEntry = entries[entries.length - 1] ?? lastEntry
   })
 
@@ -146,7 +172,7 @@ export function transposeChart(chart: Chart, semitones: number): Chart {
   return {
     errors: chart.errors,
     bars: chart.bars.map((b) => ({
-      index: b.index,
+      ...b,
       entries: b.entries.map((e) => {
         if (!e.chord) return e
         const chord = transposeChord(e.chord, semitones)

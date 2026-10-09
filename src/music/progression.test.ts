@@ -118,3 +118,47 @@ describe('transposeChart / entryAtBeat', () => {
     expect(entryAtBeat(bars[0], 3).label).toBe('G')
   })
 })
+
+describe('コメント行（# …）', () => {
+  it('# で始まる行は無視され、小節数・エラー位置に影響しない', () => {
+    const { bars, errors } = parseProgression('# サビ\n| C | G |\n  # 次\n| Am | F |')
+    expect(errors).toEqual([])
+    expect(bars.map((b) => b.entries[0].label)).toEqual(['C', 'G', 'Am', 'F'])
+  })
+
+  it('コメントの次の小節にセクション名が付く', () => {
+    const { bars } = parseProgression('# Aメロ\n| C | G |\n# サビ\n| Am | F |')
+    expect(bars.map((b) => b.section)).toEqual(['Aメロ', undefined, 'サビ', undefined])
+  })
+
+  it('コメントだけなら入力なしと同じエラー', () => {
+    const { bars, errors } = parseProgression('# サビ')
+    expect(bars).toEqual([])
+    expect(errors).toHaveLength(1)
+  })
+
+  it('コメント後のエラー位置は元のテキストの位置のまま', () => {
+    const text = '# メモ\n| C | Xyz |'
+    const { errors } = parseProgression(text)
+    expect(errors).toHaveLength(1)
+    expect(text.slice(errors[0].start, errors[0].start + errors[0].length)).toBe('Xyz')
+    expect(errors[0].bar).toBe(1)
+  })
+
+  it('コード中の # (F#m) はコメントにならない', () => {
+    const { bars, errors } = parseProgression('| F#m | C# |')
+    expect(errors).toEqual([])
+    expect(bars.map((b) => b.entries[0].label)).toEqual(['F#m', 'C#'])
+  })
+
+  it('移調してもセクション名を保つ', () => {
+    const chart = transposeChart(parseProgression('# サビ\n| C | G |'), 2)
+    expect(chart.bars[0].section).toBe('サビ')
+    expect(chart.bars[0].entries[0].label).toBe('D')
+  })
+
+  it('% の小節繰り返しにはセクション名を引き継がない', () => {
+    const { bars } = parseProgression('# A\n| C | % |')
+    expect(bars.map((b) => b.section)).toEqual(['A', undefined])
+  })
+})

@@ -1,14 +1,7 @@
+import { useState } from 'react'
 import type { ParseError } from '../music/progression'
-
-export const PRESETS: { name: string; text: string }[] = [
-  { name: '王道進行', text: '| F | G | Em | Am |' },
-  { name: 'カノン進行', text: '| C | G | Am | Em | F | C | F | G |' },
-  { name: '小室進行', text: '| Am | F | G | C |' },
-  { name: 'ジャズポップ進行', text: '| Fmaj7 | E7 | Am7 | Gm7 C7 |' },
-  { name: 'ブルース12小節', text: '| C7 | C7 | C7 | C7 | F7 | F7 | C7 | C7 | G7 | F7 | C7 | G7 |' },
-  { name: 'ジャズ II-V-I', text: '| Dm7 | G7 | Cmaj7 | Cmaj7 |' },
-  { name: 'ロック（I-IV-V）', text: '| A | D | E | A |' },
-]
+import { ImportPanel } from './ImportPanel'
+import { PRESETS, type Preset } from './presets'
 
 const KEY_LABELS = ['-6', '-5', '-4', '-3', '-2', '-1', '±0', '+1', '+2', '+3', '+4', '+5', '+6']
 
@@ -18,25 +11,39 @@ interface Props {
   beatsPerBar: 3 | 4
   transpose: number
   onText: (t: string) => void
+  onPreset: (p: Preset) => void
   onBeats: (b: 3 | 4) => void
   onTranspose: (n: number) => void
 }
 
 export function ProgressionEditor(p: Props) {
+  const [importing, setImporting] = useState(false)
   return (
     <section className="card">
       <h2>コード進行</h2>
       <div className="presets">
         {PRESETS.map((x) => (
-          <button key={x.name} className="chip" onClick={() => p.onText(x.text)}>
+          <button key={x.name} className="chip" onClick={() => p.onPreset(x)}>
             {x.name}
           </button>
         ))}
+        <button className="chip import-open" aria-expanded={importing} onClick={() => setImporting(!importing)}>
+          コード譜を貼り付け
+        </button>
       </div>
+      {importing && (
+        <ImportPanel
+          onApply={(text) => {
+            p.onText(text)
+            setImporting(false)
+          }}
+          onCancel={() => setImporting(false)}
+        />
+      )}
       <textarea
         value={p.text}
         onChange={(e) => p.onText(e.target.value)}
-        rows={3}
+        rows={5}
         spellCheck={false}
         autoCapitalize="off"
         autoCorrect="off"
@@ -55,7 +62,7 @@ export function ProgressionEditor(p: Props) {
           ))}
         </ul>
       )}
-      <p className="hint">小節は「|」で区切り、1小節内のコードは空白区切りで拍を等分します。「%」「-」は前のコードの継続、「N.C.」は休みです。</p>
+      <p className="hint">小節は「|」で区切り、1小節内のコードは空白区切りで拍を等分します。「%」「-」は前のコードの継続、「N.C.」は休みです。「#」で始まる行はメモ（セクション名）になります。</p>
       <div className="row">
         <label>
           拍子

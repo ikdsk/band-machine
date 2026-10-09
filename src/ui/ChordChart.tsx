@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import type { FillKind } from '../music/fills'
 import type { Chart } from '../music/progression'
 
@@ -45,8 +46,13 @@ export function ChordChart(p: Props) {
               .filter(Boolean)
               .join(' ')
             return (
+              <Fragment key={bar.index}>
+                {bar.section !== undefined && (
+                  <div className="section-label" role="listitem">
+                    {bar.section}
+                  </div>
+                )}
               <button
-                key={bar.index}
                 role="listitem"
                 className={cls}
                 onClick={() => p.onSelect(p.selected === bar.index ? null : bar.index)}
@@ -67,6 +73,7 @@ export function ChordChart(p: Props) {
                   {auto && <em className="mark fill auto">フィル</em>}
                 </span>
               </button>
+              </Fragment>
             )
           })}
         </div>
