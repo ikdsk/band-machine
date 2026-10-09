@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_MIXER, type MixerState, isAudible, volumeToDb } from './mixer'
+import { DEFAULT_MIXER, type MixerState, channelDb, isAudible, volumeToDb } from './mixer'
 
 const mixer = (patch: Partial<Record<keyof MixerState, Partial<MixerState['drums']>>>): MixerState => {
   const m = structuredClone(DEFAULT_MIXER)
@@ -38,5 +38,23 @@ describe('volumeToDb', () => {
     expect(volumeToDb(0)).toBe(-Infinity)
     expect(volumeToDb(0.5)).toBeCloseTo(-6.02, 1)
     expect(volumeToDb(0.0001)).toBe(-60)
+  })
+})
+
+describe('channelDb（実際に Volume へ設定する値）', () => {
+  it('ミュート時は -Infinity', () => {
+    expect(channelDb(mixer({ guitar: { mute: true } }), 'guitar')).toBe(-Infinity)
+  })
+  it('ソロがあると非ソロは -Infinity、ソロ自身は音量どおり', () => {
+    const m = mixer({ bass: { solo: true, volume: 0.5 } })
+    expect(channelDb(m, 'drums')).toBe(-Infinity)
+    expect(channelDb(m, 'bass')).toBeCloseTo(-6.02, 1)
+  })
+  it('ミュート解除で音量に戻る', () => {
+    expect(channelDb(mixer({ drums: { mute: true } }), 'drums')).toBe(-Infinity)
+    expect(channelDb(mixer({ drums: { mute: false, volume: 1 } }), 'drums')).toBeCloseTo(0)
+  })
+  it('音量 0 は -Infinity', () => {
+    expect(channelDb(mixer({ keys: { volume: 0 } }), 'keys')).toBe(-Infinity)
   })
 })

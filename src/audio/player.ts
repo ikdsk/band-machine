@@ -4,7 +4,7 @@ import * as Tone from 'tone'
 import type { BarRange } from '../music/arrange'
 import { type NoteEvent, toToneTime } from '../music/types'
 import { BassSynth, Clicker, DrumKit, GuitarSynth, type Instrument, KeysSynth } from './instruments'
-import { type MixerKey, type MixerState, MIXER_KEYS, isAudible, volumeToDb } from './mixer'
+import { type MixerKey, type MixerState, MIXER_KEYS, channelDb, volumeToDb } from './mixer'
 
 export interface PlaybackSpec {
   events: NoteEvent[]
@@ -92,9 +92,9 @@ export class Player {
     this.mixer = mixer
     if (!this.graph) return
     for (const key of MIXER_KEYS) {
-      const ch = this.graph.channels[key]
-      ch.mute = !isAudible(mixer, key)
-      ch.volume.value = volumeToDb(mixer[key].volume)
+      // Channel.mute は volume.value = -Infinity で実装されており、後続の volume 代入で解除されてしまう。
+      // ミュート/ソロも含めた最終値を volume に一本化して設定する
+      this.graph.channels[key].volume.value = channelDb(mixer, key)
     }
     // カウントインはクリックのミュート設定に関係なく鳴らし、音量だけ合わせる
     this.graph.countChannel.volume.value = volumeToDb(mixer.click.volume)

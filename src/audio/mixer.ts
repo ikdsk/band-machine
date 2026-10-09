@@ -42,3 +42,8 @@ export function volumeToDb(volume: number): number {
   if (volume <= 0) return -Infinity
   return Math.max(-60, 20 * Math.log10(volume))
 }
+
+/** チャンネルの Volume に設定する dB。ミュート/ソロで消える場合は -Infinity */
+export function channelDb(mixer: MixerState, key: MixerKey): number {
+  return isAudible(mixer, key) ? volumeToDb(mixer[key].volume) : -Infinity
+}
