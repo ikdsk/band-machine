@@ -1,6 +1,4 @@
-import { useState } from 'react'
 import type { ParseError } from '../music/progression'
-import { ImportPanel } from './ImportPanel'
 import { PRESETS, type Preset } from './presets'
 
 const KEY_LABELS = ['-6', '-5', '-4', '-3', '-2', '-1', '±0', '+1', '+2', '+3', '+4', '+5', '+6']
@@ -17,7 +15,6 @@ interface Props {
 }
 
 export function ProgressionEditor(p: Props) {
-  const [importing, setImporting] = useState(false)
   return (
     <section className="card">
       <h2>コード進行</h2>
@@ -27,19 +24,7 @@ export function ProgressionEditor(p: Props) {
             {x.name}
           </button>
         ))}
-        <button className="chip import-open" aria-expanded={importing} onClick={() => setImporting(!importing)}>
-          コード譜を貼り付け
-        </button>
       </div>
-      {importing && (
-        <ImportPanel
-          onApply={(text) => {
-            p.onText(text)
-            setImporting(false)
-          }}
-          onCancel={() => setImporting(false)}
-        />
-      )}
       <textarea
         value={p.text}
         onChange={(e) => p.onText(e.target.value)}
@@ -62,7 +47,7 @@ export function ProgressionEditor(p: Props) {
           ))}
         </ul>
       )}
-      <p className="hint">小節は「|」で区切り、1小節内のコードは空白区切りで拍を等分します。「%」「-」は前のコードの継続、「N.C.」は休みです。「#」で始まる行はメモ（セクション名）になります。</p>
+      <p className="hint">小節は「|」で区切り、1小節内のコードは空白区切りで拍を等分します。「%」「-」は前のコードの継続、「N.C.」は休みです。「#」で始まる行はメモ（セクション名）になります（例: # サビ）。</p>
       <div className="row">
         <label>
           拍子
