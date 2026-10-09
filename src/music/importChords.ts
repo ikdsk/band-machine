@@ -42,10 +42,12 @@ const nfkc = (s: string) => s.normalize('NFKC')
  * 読めないときは null。N.C. は 'N.C.' を返す。
  */
 export function normalizeChordSymbol(raw: string): string | null {
-  let s = nfkc(raw).trim().replace(/[,、。]+$/, '')
+  let s = joinSplitTokens(nfkc(raw).trim().replace(/[,、。]+$/, ''))
   const wrapped = /^[(\[]([^()[\]]+)[)\]]$/.exec(s)
   if (wrapped) s = wrapped[1].trim()
   if (isNoChord(s)) return 'N.C.'
+  // 括弧の対応が取れないもの（F) や C7(b9）は、残骸を読み捨てず不正とする
+  if (s.split('(').length !== s.split(')').length) return null
 
   s = s.replace(/♭/g, 'b').replace(/♯/g, '#')
   // onコード: C onE / C(onE) / ConE → C/E
@@ -81,10 +83,21 @@ type Tok =
   | { kind: 'chord'; text: string; symbol: string }
   | { kind: 'unknown'; text: string }
 
+/**
+ * 空白や括弧で分かれた onコード・括弧テンションを、1 つのトークンにつなぐ。
+ * D♭ on F / D♭(on F) / D♭ (onF) → D♭/F、C (add9) / Dm7 (b5) → C(add9) / Dm7(b5)
+ */
+function joinSplitTokens(s: string): string {
+  s = s.replace(/(\S)(?:\s*\(\s*|\s+)[oO][nN]\s*([A-G][#b♭♯]?)\s*\)?(?=\s|\||$)/g, '$1/$2')
+  const tension = '(?:add)?[b#♭♯+-]?\\d{1,2}'
+  const re = new RegExp(`(\\S)\\s*\\(\\s*(${tension}(?:\\s*,?\\s*${tension})*)\\s*\\)(?=\\s|\\||$)`, 'g')
+  return s.replace(re, (_, pre: string, inner: string) => `${pre}(${inner.replace(/\s+/g, '')})`)
+}
+
 /** 行の前処理: 小節線の統一、onコードの結合 */
 function prepareChordText(line: string): string {
   let s = nfkc(line)
-  s = s.replace(/(\S)\s+\(?[oO][nN]\s*([A-G][#b♭♯]?)\)?(?=\s|\||$)/g, '$1/$2')
+  s = joinSplitTokens(s)
   s = s.replace(/:?\|+:?/g, ' | ')
   s = s.replace(/(^|\s)\/+(?=\s|$)/g, '$1|')
   return s
@@ -118,7 +131,11 @@ function analyzeChordLine(line: string): LineAnalysis {
       continue
     }
     const core = text.replace(/^[(\[]|[)\]]$/g, '')
-    if (CHORDISH.test(core) && CHORD_SYNTAX.test(core.slice(1))) {
+    const unbalanced = /^\(?[A-G]/.test(text) && text.split('(').length !== text.split(')').length
+    if (unbalanced) {
+      toks.push({ kind: 'unknown', text })
+      unknown++
+    } else if (CHORDISH.test(core) && CHORD_SYNTAX.test(core.slice(1))) {
       toks.push({ kind: 'unknown', text: core })
       unknown++
     } else {

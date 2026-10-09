@@ -358,3 +358,48 @@ describe('importChords: 出力', () => {
     expectParsable(r.text)
   })
 })
+
+describe('空白入りの onコード・括弧テンション（コード行内）', () => {
+  it('D♭(on F)  Dm7(♭5)  G7sus4', () => {
+    const r = importChords('D♭(on F)  Dm7(♭5)  G7sus4')
+    expect(r.text).toBe('| Db/F | Dm7b5 | G7sus4 |')
+    expect(r.warnings).toEqual([])
+  })
+
+  it.each(['D♭ on F', 'D♭ (on F)', 'D♭(on F)', 'D♭(onF)', 'D♭( on F )', 'D♭（on F）', 'D♭　（ｏｎ　Ｆ）', 'D♭ onF'])(
+    '%s → Db/F（単体・行内とも）',
+    (src) => {
+      expect(normalizeChordSymbol(src)).toBe('Db/F')
+      expect(importChords(`${src}  G  Am`).text).toBe('| Db/F | G | Am |')
+    },
+  )
+
+  it.each([
+    ['C(9)', 'Cadd9'],
+    ['C (9)', 'Cadd9'],
+    ['C( 9 )', 'Cadd9'],
+    ['Dm7 (♭5)', 'Dm7b5'],
+    ['Dm7(♭5)', 'Dm7b5'],
+    ['C7(#9)', 'C7#9'],
+    ['C7 (#9)', 'C7#9'],
+    ['C (add9)', 'Cadd9'],
+    ['C7 (b9, #11)', 'C7b9#11'],
+  ])('%s → %s', (src, sym) => {
+    expect(importChords(`${src}  G  Am`).text).toBe(`| ${sym} | G | Am |`)
+  })
+
+  it('括弧の残骸は別のコードに化けさせず、警告してスキップ', () => {
+    expect(normalizeChordSymbol('F)')).toBeNull()
+    expect(normalizeChordSymbol('C7(b9')).toBeNull()
+    const r = importChords('D♭(on  G7  Am')
+    expect(r.text).toBe('| G7 | Am |')
+    expect(r.warnings.some((w) => w.includes('D♭(on') || w.includes('Db(on'))).toBe(true)
+    const r2 = importChords('C  F)  G  Am')
+    expect(r2.text).toBe('| C | G | Am |')
+    expect(r2.warnings.some((w) => w.includes('F)'))).toBe(true)
+  })
+
+  it('単独の (G) は括弧つきコードのまま（テンションと混同しない）', () => {
+    expect(importChords('C (G) Am').text).toBe('| C | G | Am |')
+  })
+})
