@@ -2,6 +2,10 @@
 
 楽器練習用のバッキング生成・演奏 Web アプリです。コード進行を入力してジャンルとバリエーションを選ぶと、ドラム・ベース・ギター・キーボードのバッキングをブラウザで演奏します。サーバーや外部 API、サンプル音源は使いません（Tone.js の合成音）。仕様は [docs/spec.md](docs/spec.md) です。
 
+公開版: https://ikdsk.github.io/band-machine/
+
+`main` ブランチへの push で GitHub Actions（`.github/workflows/deploy.yml`）がテスト・ビルドを実行し、GitHub Pages へ自動デプロイします。
+
 ## 起動方法
 
 ```sh
